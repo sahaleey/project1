@@ -1,0 +1,59 @@
+{
+  "name": "langchain-chat",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^6.1.4",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.5.1",
+    "axios": "^1.9.0",
+    "framer-motion": "^10.18.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-error-boundary": "^4.0.11",
+    "react-icons": "^4.12.0",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^5.0.1",
+    "zustand": "^4.5.7"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.8",
+    "@types/node": "^20.9.2",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.33.2",
+    "prettier": "^3.1.0",
+    "typescript": "^4.9.5"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "clean": "rimraf node_modules package-lock.json"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
