@@ -15,6 +15,8 @@ from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
+
+
 # ----------------------- Logging Setup -----------------------
 logging.basicConfig(
     level=logging.INFO,
@@ -61,13 +63,18 @@ class ErrorResponse(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 # ----------------------- Config -----------------------
-import os
 
 class Config:
     MODEL_NAME = os.getenv("MODEL_NAME", "nousresearch/deephermes-3-mistral-24b-preview:free")
     API_KEY = os.getenv("OPENROUTER_API_KEY")
     API_BASE = os.getenv("OPENROUTER_API_BASE", "https://openrouter.ai/api/v1")
     MAX_RETRIES = 3
+    
+
+
+# Use os.getenv("OPENROUTER_API_KEY") to initialize your OpenRouter client
+
+
 
 
 # ----------------------- AI Agent Init -----------------------
@@ -332,6 +339,7 @@ async def chat(request: Request, chat_request: ChatRequest):
                     detail="Rate limit exceeded: You have reached the free model request limit for today. Please try again later or consider adding credits."
                 )
             else:
+                logger.error(f"Unexpected ValueError: {ve}")
                 raise  # Re-raise if other ValueError
 
         if not assistant_response.strip():
