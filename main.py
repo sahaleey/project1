@@ -65,7 +65,7 @@ class ErrorResponse(BaseModel):
 # ----------------------- Config -----------------------
 import os
 class Config:
-    MODEL_NAME = os.getenv("MODEL_NAME", "nousresearch/deephermes-3-mistral-24b-preview:free")
+    MODEL_NAME = os.getenv("MODEL_NAME", "tngtech/deepseek-r1t-chimera:free")
     API_KEY = os.getenv("OPENROUTER_API_KEY")
     API_BASE = os.getenv("OPENROUTER_API_BASE", "https://openrouter.ai/api/v1")
     MAX_RETRIES = 3
