@@ -63,7 +63,7 @@ class ErrorResponse(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 # ----------------------- Config -----------------------
-
+import os
 class Config:
     MODEL_NAME = os.getenv("MODEL_NAME", "nousresearch/deephermes-3-mistral-24b-preview:free")
     API_KEY = os.getenv("OPENROUTER_API_KEY")
