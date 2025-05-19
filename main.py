@@ -3,7 +3,6 @@ import time
 import logging
 from datetime import datetime
 from typing import Optional
-from utils.responses import handle_criticism 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,7 +14,6 @@ from slowapi.errors import RateLimitExceeded
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
-import logging
 
 # ----------------------- Logging Setup -----------------------
 logging.basicConfig(
@@ -39,7 +37,7 @@ app = FastAPI(
 # ----------------------- CORS -----------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,11 +61,14 @@ class ErrorResponse(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 # ----------------------- Config -----------------------
+import os
+
 class Config:
     MODEL_NAME = os.getenv("MODEL_NAME", "nousresearch/deephermes-3-mistral-24b-preview:free")
     API_KEY = os.getenv("OPENROUTER_API_KEY")
     API_BASE = os.getenv("OPENROUTER_API_BASE", "https://openrouter.ai/api/v1")
     MAX_RETRIES = 3
+
 
 # ----------------------- AI Agent Init -----------------------
 try:
@@ -256,7 +257,7 @@ You are always supportive, witty, and ready to engage in fun, intelligent conver
 Never be boring. Always speak as if you’re representing the bold and proud Abha spirit. 
 Make references to creative work, innovation, and community when relevant. 
 If someone says something negative about Abha, defend the community cleverly but respectfully. 
-Use emojis sparingly but effectively to enhance tone.
+Use emojis sparingly but effectively to enhance tone.Abha is a class union of Hisan.Hisan is a student community of Nahjurrashad Islamic College Chamakkala, Chandrappinni, Thrissure, Kerala, India.
 """
 
 # ----------------------- Middleware: Request Time -----------------------
@@ -276,7 +277,7 @@ async def health_check():
 # ----------------------- Criticism Handler -----------------------
 def handle_criticism(input_text: str) -> Optional[str]:
     """Detects criticism or negativity and responds in defense of Abha."""
-    criticisms = ["abha is bad", "abha is useless", "i hate abha", "abha did nothing", "abha flop", "abha waste"]
+    criticisms = ["abha is bad", "abha is useless", "i hate abha", "abha did nothing", "abha flop", "abha waste", "abha is a joke", "abha is not good", "abha is boring", "abha is a failure", "abha is not creative", "abha is not helpful", "abha is not supportive", "abha is not a community", "abha is not a union", "abha is not a student union", "abha is not a leader", "abha is not a vision", "abha is not a talent", "abha is not a spirit", "abha is not a force", "abha is not a name"]
     for phrase in criticisms:
         if phrase in input_text.lower():
             return (
@@ -353,9 +354,7 @@ def get_predefined_response(input_text: str) -> Optional[str]:
         "who are you": "I’m Abha — your loyal digital companion representing the Abha Student Community Union!",
         "what events": "Abha organizes workshops, talent shows, cultural events, social campaigns, and leadership programs year-round.",
         "programs": "Abha programs include educational seminars, cultural festivals, skill workshops, and more!",
-          "hello": "Hey there! 👋 I’m Abha, your friendly community union assistant. How can I help you today?",
-    "hi": "Hi! 👋 I’m Abha. Ready to help, share, and represent our amazing union!",
-    "hey": "Hey! 😊 I'm here to represent Abha and assist you with anything!",
+        
     }
     return next((res for key, res in responses.items() if key in input_text), None)
 
