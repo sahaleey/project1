@@ -69,6 +69,7 @@ class Config:
     API_KEY = os.getenv("OPENROUTER_API_KEY")
     API_BASE = os.getenv("OPENROUTER_API_BASE", "https://openrouter.ai/api/v1")
     MAX_RETRIES = 3
+    print("API Key:", API_KEY)
     
 
 
