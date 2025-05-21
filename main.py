@@ -14,6 +14,8 @@ from slowapi.errors import RateLimitExceeded
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
+from langchain.memory import ConversationBufferMemory
+from langchain.agents import initialize_agent, AgentType
 
 
 
@@ -281,6 +283,28 @@ Make references to creative work, innovation, and community when relevant.
 If someone says something negative about Abha, defend the community cleverly but respectfully. 
 Use emojis very selectively—only when they add clear emphasis, emotion, or attraction to the message. Avoid using emojis in every response or as filler.Abha is a class union of Hisan.Hisan is a student community of Nahjurrashad Islamic College Chamakkala, Chandrappinni, Thrissure, Kerala, India.
 """
+
+# ----------------------- AI Agent Init with Memory -----------------------
+try:
+    model = ChatOpenAI(
+        model=Config.MODEL_NAME,
+        temperature=0,
+        openai_api_key=Config.API_KEY,
+        openai_api_base=Config.API_BASE,
+    )
+    tools = []
+    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    agent_executor = initialize_agent(
+        tools=tools,
+        llm=model,
+        agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
+        verbose=False,
+        memory=memory
+    )
+    logger.info("AI model with memory initialized successfully.")
+except Exception as e:
+    logger.exception("Model initialization failed.")
+    raise RuntimeError("Model initialization error") from e
 
 # ----------------------- Middleware: Request Time -----------------------
 @app.middleware("http")
