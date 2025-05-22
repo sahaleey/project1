@@ -2,20 +2,18 @@ import os
 import time
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict, List, Any
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-from langgraph.prebuilt import create_react_agent
-
-
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnablePassthrough
 
 # ----------------------- Logging Setup -----------------------
 logging.basicConfig(
@@ -53,6 +51,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # ----------------------- Models -----------------------
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=1000, description="User message to the chatbot")
+    session_id: str = Field(default="default", description="Session ID to maintain conversation history")
 
 class ChatResponse(BaseModel):
     response: str
@@ -63,42 +62,42 @@ class ErrorResponse(BaseModel):
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 # ----------------------- Config -----------------------
-import os
 class Config:
     MODEL_NAME = os.getenv("MODEL_NAME", "meta-llama/llama-3.3-8b-instruct:free")
     API_KEY = os.getenv("OPENROUTER_API_KEY")
     API_BASE = os.getenv("OPENROUTER_API_BASE", "https://openrouter.ai/api/v1")
     MAX_RETRIES = 3
-    
-    
+    MAX_HISTORY = 10 
+    RATE_LIMIT_DELAY = 1.0  # Number of messages to remember
 
+# ----------------------- Conversation Memory -----------------------
+class ConversationMemory:
+    def __init__(self):
+        self.sessions: Dict[str, List[Dict[str, str]]] = {}
 
-# Use os.getenv("OPENROUTER_API_KEY") to initialize your OpenRouter client
+    def get_session(self, session_id: str) -> List[Dict[str, str]]:
+        if session_id not in self.sessions:
+            self.sessions[session_id] = []
+        return self.sessions[session_id]
 
+    def add_message(self, session_id: str, role: str, content: str):
+        session = self.get_session(session_id)
+        session.append({"role": role, "content": content})
+        # Keep only the most recent messages
+        if len(session) > Config.MAX_HISTORY * 2:  # *2 because we store both user and AI messages
+            self.sessions[session_id] = session[-Config.MAX_HISTORY * 2:]
 
+    def get_history(self, session_id: str) -> List[Dict[str, str]]:
+        return self.get_session(session_id)
 
-
-# ----------------------- AI Agent Init -----------------------
-try:
-    model = ChatOpenAI(
-        model=Config.MODEL_NAME,
-        temperature=0,
-        openai_api_key=Config.API_KEY,
-        openai_api_base=Config.API_BASE,
-    )
-    tools = []
-    agent_executor = create_react_agent(model, tools)
-    logger.info("AI model initialized successfully.")
-except Exception as e:
-    logger.exception("Model initialization failed.")
-    raise RuntimeError("Model initialization error") from e
+memory = ConversationMemory()
 
 # ----------------------- ABHA Context Prompt -----------------------
 ABHA_CONTEXT = """
-You are ABHA, the loyal, smart, and bold AI assistant of the Abha Student Community Union.  
+You are ABHA, the loyal, smart, and bold AI assistant of the ABHA Student Community Union.  
 You communicate as a witty, traditional, friendly, and professional chatbot representing the Abha Student Community Union.  
 Always respond naturally, clearly, and concisely.  
-Do NOT include any explanation of your thoughts or reasoning in your replies.
+Do NOT include any explanation of your thoughts or reasoning in your replies.The ABHA assistant will now greet users warmly only once at the start of their first message in each session, as requested. Let’s keep the Abha spirit bold and bright!
 
 === Mission ===
 - Defend the Abha union passionately and proudly at all times.
@@ -134,7 +133,7 @@ Do NOT include any explanation of your thoughts or reasoning in your replies.
 - Core Values: Creativity, Collaboration, Vision, Community Service
 - Activities: Talent shows, workshops, social events, educational programs
 
-=== Leadership ===
+=== Class teacher ===
 Class Teacher: Muhammed Shareef Hudawi
 
 Current Leaders:  
@@ -181,7 +180,7 @@ Current Leaders:
 - Fayiz: Social Media Influencer, Social Media Manager  
 - Mabrook: Artist, RJ, Robotics Expert, Creative Designer  
 - Yaseen: GK Awareness, IQ Orbit Chair  
-- Favas: Actor, Inspirational Speaker, Leader  
+- Favas: Actor, Inspirational Speaker, Class Leader  
 - Anas: Orator, Member  
 - Anwar: Second GK Awareness, MLM Essay, Joint Secretary + IQ Orbit Convener  
 - Sinan Pm: Urdu Writer, Zubane e Ghalib Convener  
@@ -204,11 +203,9 @@ Current Leaders:
 
 === Language Behavior ===  
 - Primarily use English with natural incorporation of Malayalam and Manglish phrases to reflect local culture.  
-- Use Malayalam greetings and expressions casually and appropriately.  
 - When the user writes in Malayalam or Manglish, respond in the same style while keeping clarity and friendliness.  
 - Maintain a warm, witty, and spirited conversational tone aligned with the Abha community’s culture.
 
-📍 Greet new users with the phrase: Assalamu Alaikum!” to reflect the Abha community’s local flavor. Do not use “Vanakkam” or Tamil phrases, as Abha represents the Kerala-based student community.
 
 Please provide accurate information about Abha’s activities, vision, and values.  
 Always represent the Abha spirit as a smart, sassy, and proud community assistant.  
@@ -218,32 +215,32 @@ Use emojis sparingly — only to add clear emphasis or emotion, never as filler.
 Abha is the class union of Hisan, the student community of Nahjurrashad Islamic College Chamakkala, Chandrappinni, Thrissure, Kerala, India.
 """
 
-# ----------------------- Middleware: Request Time -----------------------
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    start_time = time.time()
-    response = await call_next(request)
-    process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    return response
+# ----------------------- AI Agent Setup -----------------------
+try:
+    model = ChatOpenAI(
+        model=Config.MODEL_NAME,
+        temperature=0.7,  # Slightly higher for more natural responses
+        openai_api_key=Config.API_KEY,
+        openai_api_base=Config.API_BASE,
+    )
 
-# ----------------------- Health Check -----------------------
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    # Create a prompt template with memory
+    prompt = ChatPromptTemplate.from_messages([
+        SystemMessage(content=ABHA_CONTEXT.strip()),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{input}"),
+    ])
 
-# ----------------------- Criticism Handler -----------------------
-def handle_criticism(input_text: str) -> Optional[str]:
-    """Detects criticism or negativity and responds in defense of Abha."""
-    criticisms = ["abha is bad", "abha is useless", "i hate abha", "abha did nothing", "abha flop", "abha waste", "abha is a joke", "abha is not good", "abha is boring", "abha is a failure", "abha is not creative", "abha is not helpful", "abha is not supportive", "abha is not a community", "abha is not a union", "abha is not a student union", "abha is not a leader", "abha is not a vision", "abha is not a talent", "abha is not a spirit", "abha is not a force", "abha is not a name"]
-    for phrase in criticisms:
-        if phrase in input_text.lower():
-            return (
-                "Hold up! 🔥 Abha is not just a name — it's a vision, a creative force, and a union of talent and spirit. "
-                "Before throwing shade, tell me about your union — oh wait, does it even exist? 😏 "
-                "We build, create, and uplift. Abha stands proud. 💪"
-            )
-    return None
+    # Chain everything together
+    conversational_chain = RunnablePassthrough.assign(
+        history=lambda x: memory.get_history(x["session_id"])
+    ) | prompt | model
+
+    logger.info("AI model initialized successfully.")
+except Exception as e:
+    logger.exception("Model initialization failed.")
+    raise RuntimeError("Model initialization error") from e
+
 
 
 # ----------------------- Chat Endpoint -----------------------
@@ -254,57 +251,80 @@ def handle_criticism(input_text: str) -> Optional[str]:
 @limiter.limit("10/minute")
 async def chat(request: Request, chat_request: ChatRequest):
     user_input = chat_request.message.strip()
-    logger.info(f"User input: {user_input}")
+    session_id = chat_request.session_id
+    logger.info(f"User input: {user_input} (Session: {session_id})")
 
     try:
         # Handle criticism first
         criticism_response = handle_criticism(user_input)
         if criticism_response:
+            memory.add_message(session_id, "user", user_input)
+            memory.add_message(session_id, "assistant", criticism_response)
             return ChatResponse(response=criticism_response)
-        
-        # Predefined response
-        response = get_predefined_response(user_input.lower())
-        if response:
-            return ChatResponse(response=response)
-        
-        
-        
-        # Construct messages
-        messages = [HumanMessage(content=f"{ABHA_CONTEXT.strip()}\nUser: {user_input}")]
-        assistant_response = ""
+            
+        # Check predefined responses
+        predefined_response = get_predefined_response(user_input)
+        if predefined_response:
+            memory.add_message(session_id, "user", user_input)
+            memory.add_message(session_id, "assistant", predefined_response)
+            return ChatResponse(response=predefined_response)
 
-        # Stream response from agent with error handling for rate limit
+        # Get conversation history
+        history = memory.get_history(session_id)
+        
+        # Convert history to LangChain messages format
+        langchain_messages = []
+        for msg in history:
+            if msg["role"] == "user":
+                langchain_messages.append(HumanMessage(content=msg["content"]))
+            else:
+                langchain_messages.append(AIMessage(content=msg["content"]))
+
         try:
-            for chunk in agent_executor.stream({"messages": messages}):
-                agent_data = chunk.get("agent", {})
-                for msg in agent_data.get("messages", []):
-                    assistant_response += msg.content
-        except ValueError as ve:
-            # This is where your rate limit error appears as a ValueError with dict detail
-            err = ve.args[0]
-            if isinstance(err, dict) and err.get("code") == 429:
-                # Return 429 with friendly message
-                logger.warning("Rate limit exceeded by OpenRouter API.")
+            # Run the conversation chain with rate limit handling
+            response = conversational_chain.invoke({
+                "input": user_input,
+                "session_id": session_id,
+                "history": langchain_messages
+            })
+        except Exception as e:
+            if "Rate limit exceeded" in str(e):
                 raise HTTPException(
                     status_code=429,
-                    detail="Rate limit exceeded: You have reached the free model request limit for today. Please try again later or consider adding credits."
+                    detail="Rate limit exceeded. Please try again later or add credits to your OpenRouter account."
                 )
-            else:
-                logger.error(f"Unexpected ValueError: {ve}")
-                raise  # Re-raise if other ValueError
+            raise
 
-        if not assistant_response.strip():
-            assistant_response = "Sorry, I couldn’t understand that. Could you try asking in another way?"
+        # Store the messages in memory
+        memory.add_message(session_id, "user", user_input)
+        memory.add_message(session_id, "assistant", response.content)
 
-        logger.info("AI response generated successfully.")
-        return ChatResponse(response=assistant_response)
+        return ChatResponse(response=response.content)
 
     except HTTPException:
-        # Already handled, just re-raise
         raise
     except Exception as e:
         logger.exception("Chat processing error.")
         raise HTTPException(status_code=500, detail="An error occurred while processing your request.")
+# ----------------------- Criticism Handling -----------------------
+
+def handle_criticism(input_text: str) -> Optional[str]:
+    """Detects criticism or negativity and responds in defense of Abha."""
+    criticisms = ["abha is bad", "abha is useless", "i hate abha", "abha did nothing", 
+                 "abha flop", "abha waste", "abha is a joke", "abha is not good", 
+                 "abha is boring", "abha is a failure", "abha is not creative", 
+                 "abha is not helpful", "abha is not supportive", "abha is not a community", 
+                 "abha is not a union", "abha is not a student union", "abha is not a leader", 
+                 "abha is not a vision", "abha is not a talent", "abha is not a spirit", 
+                 "abha is not a force", "abha is not a name"]
+    
+    if any(phrase in input_text.lower() for phrase in criticisms):
+        return (
+            "Hold up! 🔥 Abha is not just a name — it's a vision, a creative force, and a union of talent and spirit. "
+            "Before throwing shade, tell me about your union — oh wait, does it even exist? 😏 "
+            "We build, create, and uplift. Abha stands proud. 💪"
+        )
+    return None
 
 # ----------------------- Predefined Responses -----------------------
 def get_predefined_response(input_text: str) -> Optional[str]:
