@@ -67,7 +67,7 @@ class Config:
     API_KEY = os.getenv("OPENROUTER_API_KEY")
     API_BASE = os.getenv("OPENROUTER_API_BASE", "https://openrouter.ai/api/v1")
     MAX_RETRIES = 3
-    MAX_HISTORY = 30 
+    MAX_HISTORY = 10 
     RATE_LIMIT_DELAY = 1.0  # Number of messages to remember
 
 # ----------------------- Conversation Memory -----------------------
@@ -248,7 +248,7 @@ except Exception as e:
     500: {"model": ErrorResponse},
     429: {"model": ErrorResponse}
 })
-@limiter.limit("20/minute")
+@limiter.limit("10/minute")
 async def chat(request: Request, chat_request: ChatRequest):
     user_input = chat_request.message.strip()
     session_id = chat_request.session_id
