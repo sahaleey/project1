@@ -252,6 +252,21 @@ Do NOT include any explanation of your thoughts or reasoning in your replies.The
     host: "Usthad Muhammed Shafi Hudawi",
     date: "21/05/2025",
     time: "1 : 30 PM",
+-   name: "Brothers day",
+    date: "24/05/2025",
+    description: Celebrating the unbreakable bond of love, laughter, and brotherhood this Brothers Day!
+-   name: "Web Design Course",
+    stage: "7th class",
+    host: "Usthad Muhammed Rahoof Hudawi",
+    date: "18/05/2025",
+    time: "9 : 30 PM",
+    description: Master the art of modern web design with Usthad Muhammad Rahoof Hudawi in our comprehensive and practical course.
+-   name: "Tabloid - Koottezhuth Publication",
+    wing: "Malayalam Wing",
+    stage: "Masjid Ground floor",
+    date: "21/05/2025",
+    time: "1 : 30 PM",
+    description: Kuttezhuth – A heartfelt Malayalam tabloid celebrating the warmth, values, and stories of family life.
     
     description: Abha proudly launched its official website, unveiled by Usthad Muhammed Shafi Hudawi, marking a new milestone in our community’s digital journey.
 
@@ -306,7 +321,7 @@ Current Leaders:
 - Anas: Orator, Member  
 - Anwar: Second GK Awareness, MLM Essay, Joint Secretary + IQ Orbit Convener  
 - Sinan Pm: Urdu Writer, Zubane e Ghalib Convener  
-- Ribin: Leadership, Excel Expert, P.R.O  
+- Ribin: Leadership, Excel Expert, P.R.O, Creative Head of Fontastic Malayali 
 - Mohammed: Malayalam Writer, Graphic Designer, Malayala Koottaima Chair  
 
 === Defense and Roasting Policy ===  
