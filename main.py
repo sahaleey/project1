@@ -14,6 +14,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import RunnablePassthrough
+from datetime import datetime
 
 # ----------------------- Logging Setup -----------------------
 logging.basicConfig(
@@ -91,6 +92,183 @@ class ConversationMemory:
         return self.get_session(session_id)
 
 memory = ConversationMemory()
+# ----------------------- ABHA Program -----------------------
+
+abha_programs = [
+    {
+        "name": "Head start",
+        "stage": "7th Class",
+        "host": "Rafi Hudawi Muvattupuzha",
+        "date": "31/04/2025",
+        "time": "4 : 20 PM",
+        "description": "Head Start’ marked the energetic launch of our journey, led by Rafi Muvattupuzha. This kickoff event set the tone for our community’s mission, inspiring everyone with motivation, clear direction, and a powerful sense of purpose."
+    },
+    {
+        "name": "ABHA Official inauguration",
+        "stage": "7th Class",
+        "host": "Usthad Younus Hudawi",
+        "date": "31/04/2025",
+        "time": "6 : 00 AM",
+        "description": "Join us as we mark the official inauguration of our Abha community — a celebration of new beginnings, shared visions, and the exciting journey ahead. Together, we open the doors to creativity, connection, and growth."
+    },
+    {
+        "name": "വിയർപ്പു തുന്നിയിട്ട കുപ്പായം",
+        "stage": "Inter lock",
+        "host": "Ahmed Zainudheen",
+        "date": "01/05/2025",
+        "time": "11 : 20 AM",
+        "description": "On May 1, led by Ahmed Zainudheen, we celebrated Labour Day, honoring workers’ dedication and the dignity of labour."
+    },
+    {
+        "name": "നേർകാഴ്ച ",
+        "stage": "Radio",
+        "host": "Yaseen Pi, Anwar",
+        "date": "03/05/2025",
+        "time": "08 : 15 PM",
+        "description": "On May 03, World Press Day. We conducted a live radio to talk about Indian anti-freedom of media"
+    },
+    {
+        "name": "Defend freedom of Press",
+        "date": "03/05/2025",
+        "description": "World Press Day. Freedom for Press!"
+    },
+    {
+        "name": "നൻ പകൽ നേരത്തെ ജോലി",
+        "date": "01/05/2025",
+        "description": "World Labour Day Special Poster"
+    },
+    {
+        "name": "ഒന്നും ഒന്നും ഒന്ന്",
+        "stage": "Out Campus",
+        "host": "ABHA",
+        "date": "05/05/2025",
+        "time": "06 : 00 AM to 10 : 00 PM",
+        "description": "നമ്മൾ ഒത്തു ചേരുമ്പോൾ ആഗ്രഹങ്ങൾക്കു കരുത്തും പ്രവർത്തനങ്ങൾക്ക് ചിറകുകളും പിറക്കുന്നു. നമ്മുടെ ഗ്രൂപ്പ് ശക്തമായി മുന്നേറാൻ, സഹകരണത്തിൻ്റെയും പ്രചോദനത്തിൻ്റെയും ഈ ഘട്ടം ഒരിക്കലുമറക്കരുത്!"
+    },
+    {
+        "name": "Al-Dheenu  Al-Nasweeha",
+        "stage": "Out Campus",
+        "host": "Usthad Shuaib Hudawi",
+        "date": "05/05/2025",
+        "time": "In Camp",
+        "description": "برنامج «الدين النصيحة» بقيادة الشيخ شعيب هداوي في المسجد، يجمعنا على دروس الإيمان والصدق.\nفرصة للارتقاء بأرواحنا وتزكية قلوبنا بنور النصيحة والمحبة."
+    },
+    {
+        "name": "Let Me Fly",
+        "stage": "Out Campus",
+        "host": "Usthad Abi Vakkas Usthad",
+        "date": "05/05/2025",
+        "time": "In Camp",
+        "description": "Let Me Fly” with Usthad Vakkas Hudawi — where your dreams grow wings and your skills find their sky.\nIt’s time to rise, break limits, and soar toward the greatness waiting inside you!"
+    },
+    {
+        "name": "Mothers day : Special poster",
+        "date": "11/05/2025",
+        "description": "Join Abha Community in honoring the unconditional love, strength, and sacrifices of mothers everywhere! Our special Mother’s Day poster is a vibrant tribute to the incredible women who shape our lives with warmth and wisdom."
+    },
+    {
+        "name": "Know The Legend",
+        "stage": "7th Class",
+        "host": "English Wing",
+        "date": "Every Tuesday",
+        "description": "Journey into Romanticism! The English Wing's #KnowTheLegend series begins with William Wordsworth – explore the poet who made nature sing. Stay tuned!"
+    },
+    {
+        "name": "Nurse Day : Special Poster",
+        "date": "12/05/2025",
+        "description": "Saluting Our Angels in Scrubs! This #InternationalNursesDay, Abha celebrates the compassion, courage and tireless care of nurses who heal the world every day. Join us in honoring these healthcare heroes!"
+    },
+    {
+        "name": "Al-Judoor",
+        "stage": "7th Class",
+        "host": "Ma'moon",
+        "date": "01/05/2025",
+        "time": "8 : 00 PM",
+        "description": "Al-Judoor is an Abha Academia initiative by our union to teach students the foundational grammar of Arabic in an engaging and accessible way."
+    },
+    {
+        "name": "Fluent Flicks",
+        "stage": "7th Class",
+        "host": "Ihsan",
+        "date": "Every Wednesday",
+        "time": "8 : 30 PM",
+        "description": "Fluent Flicks is an English Wing program designed to introduce students to new English vocabulary through fun and interactive learning."
+    },
+    {
+        "name": "ABHA Parliament - Janashabdam",
+        "stage": "7th Class",
+        "host": "Class leader",
+        "date": "All Month last Week",
+        "time": "9 : 30 PM",
+        "description": "ABHA Parliament is an inspiring initiative to empower and motivate the class wing through leadership, collaboration, and active participation."
+    },
+    {
+        "name": "Carrier Guidance",
+        "stage": "7th Class",
+        "host": "Usthad Muhammad Asif Hudawi",
+        "date": "15/05/2025",
+        "time": "3 : 20 PM",
+        "description": "A Career Guidance class by Usthad Muhammed Asif Hudawi is being conducted to help students make informed and purpose-driven career choices."
+    },
+    {
+        "name": "നേര്‍കാഴ്ച - മോദിയോടുള്ള ചോദ്യങ്ങള്‍",
+        "stage": "In front of 7th Class",
+        "host": "Anwar sadath",
+        "date": "13/05/2025",
+        "time": "9 : 30 PM",
+        "description": "IQ Orbit is hosting a group discussion titled \"നേര്‍കാഴ്ച - മോദിയോടുള്ള ചോദ്യങ്ങള്‍\" to critically engage students on the Pahalgam terrorist attack and encourage thoughtful dialogue."
+    },
+    {
+        "name": "لطائف قرآنية",
+        "stage": "7th Class",
+        "host": "Ma'moon",
+        "date": "01/05/2025",
+        "time": "6 : 30 AM",
+        "description": "\"لطائف قرآنية\" is an enlightening session by Ma'moon under Abha Academia, aimed at introducing students to the profound laws and wisdom of the Qur’an."
+    },
+    {
+        "name": "നേര്‍കാഴ്ച - 3 diffrent topic",
+        "stage": "In front of 7th Class",
+        "host": "IQ Orbit",
+        "date": "21/05/2025",
+        "time": "9 : 30 PM",
+        "description": "ABHA conducting \"നേര്‍കാഴ്ച\" sessions on three diverse topics, hosted by IQ Orbit, to spark critical thinking and open discussion among students."
+    },
+    {
+        "name": "World Anti-Terrorist day - Special poster",
+        "date": "21/05/2025",
+        "description": "ABHA created a powerful special poster to commemorate Anti-Terrorist Day, spreading awareness and promoting peace among students."
+    },
+    {
+        "name": "ABHA Official web launching",
+        "stage": "Masjid Ground floor",
+        "host": "Usthad Muhammed Shafi Hudawi",
+        "date": "21/05/2025",
+        "time": "1 : 30 PM"
+    },
+    {
+        "name": "Brothers day",
+        "date": "24/05/2025",
+        "description": "Celebrating the unbreakable bond of love, laughter, and brotherhood this Brothers Day!"
+    },
+    {
+        "name": "Web Design Course",
+        "stage": "7th class",
+        "host": "Usthad Muhammed Rahoof Hudawi",
+        "date": "18/05/2025",
+        "time": "9 : 30 PM",
+        "description": "Master the art of modern web design with Usthad Muhammad Rahoof Hudawi in our comprehensive and practical course."
+    },
+    {
+        "name": "Tabloid - Koottezhuth Publication",
+        "wing": "Malayalam Wing",
+        "stage": "Masjid Ground floor",
+        "date": "21/05/2025",
+        "time": "1 : 30 PM",
+        "description": "Kuttezhuth – A heartfelt Malayalam tabloid celebrating the warmth, values, and stories of family life. Abha proudly launched its official website, unveiled by Usthad Muhammed Shafi Hudawi, marking a new milestone in our community’s digital journey."
+    }
+]
+
 
 # ----------------------- ABHA Context Prompt -----------------------
 ABHA_CONTEXT = """
@@ -146,149 +324,16 @@ You can suggest refreshing the page or trying in another browser/device if the p
 - Core Values: Creativity, Collaboration, Vision, Community Service
 - Activities: Talent shows, workshops, social events, educational programs
 
+
 === Monthly Student Assemblies ===
-- At the end of every month, our student association organizes a full-campus assembly.
-- Each assembly is conducted by a different class on a rotational basis.
-- These gatherings aim to foster unity, reflection, and awareness among students, often themed around significant historical, cultural, or social topics.
-- 🕊️ **Tomorrow’s Assembly Theme:** “Hiroshima Remembrance” — Reflecting on August 6, the day America dropped the atomic bomb on Hiroshima.  
-  This assembly, conducted by our class, will honor the memory of the innocent lives lost and raise awareness about peace, humanity, and the consequences of war.
+- At the end of every month, the Abha Student Association organizes a campus-wide assembly.
+- Each class takes turns hosting the assembly, preparing thoughtful, creative, and themed presentations.
+- These events foster leadership, unity, and reflection among students.
 
-
-=== Programes ===
-
--   name: "Head start",
-    stage: "7th Class",
-    host: "Rafi Hudawi Muvattupuzha",
-    date: "31/04/2025",
-    time: "4 : 20 PM",
-    description:
-      "Head Start’ marked the energetic launch of our journey, led by Rafi Muvattupuzha. This kickoff event set the tone for our community’s mission, inspiring everyone with motivation, clear direction, and a powerful sense of purpose."
--   name: "ABHA Official inauguration",
-    stage: "7th Class",
-    host: "Usthad Younus Hudawi",
-    date: "31/04/2025",
-    time: "6 : 00 AM",
-    description:
-      "Join us as we mark the official inauguration of our Abha community — a celebration of new beginnings, shared visions, and the exciting journey ahead. Together, we open the doors to creativity, connection, and growth."
--   name: "വിയർപ്പു തുന്നിയിട്ട കുപ്പായം",
-    stage: "Inter lock",
-    host: "Ahmed Zainudheen",
-    date: "01/05/2025",
-    time: "11 : 20 AM",
-    description:
-      "On May 1, led by Ahmed Zainudheen, we celebrated Labour Day, honoring workers’ dedication and the dignity of labour."
--   name: "നേർകാഴ്ച ",
-    stage: "Radio",
-    host: "Yaseen Pi, Anwar",
-    date: "03/05/2025",
-    time: "08 : 15 PM",
-    description:
-      "On May 03, World Press Day. We conducted a live radio to talk about Indian anti-freedom of media"
--   name: "Defend freedom of Press",
-    date: "03/05/2025",
-    description: "World Press Day. Freedom for Press!"
--   name: "നൻ പകൽ നേരത്തെ ജോലി",
-    date: "01/05/2025",
-    description: "World Labour Day Special Poster",
--   name: "ഒന്നും ഒന്നും ഒന്ന്  ",
-    stage: "Out Campus",
-    host: "ABHA",
-    date: "05/05/2025",
-    time: "06 : 00 AM to 10 : 00 PM",
-    description:
-      "നമ്മൾ ഒത്തു ചേരുമ്പോൾ ആഗ്രഹങ്ങൾക്കു കരുത്തും പ്രവർത്തനങ്ങൾക്ക് ചിറകുകളും പിറക്കുന്നു. നമ്മുടെ ഗ്രൂപ്പ് ശക്തമായി മുന്നേറാൻ, സഹകരണത്തിൻ്റെയും പ്രചോദനത്തിൻ്റെയും ഈ ഘട്ടം ഒരിക്കലുമറക്കരുത്!"
--   name: "Al-Dheenu  Al-Nasweeha",
-    stage: "Out Campus",
-    host: "Usthad Shuaib Hudawi",
-    date: "05/05/2025",
-    time: "In Camp",
-    description: `برنامج «الدين النصيحة» بقيادة الشيخ شعيب هداوي في المسجد، يجمعنا على دروس الإيمان والصدق.
-فرصة للارتقاء بأرواحنا وتزكية قلوبنا بنور النصيحة والمحبة.
--   name: "Let Me Fly",
-    stage: "Out Campus",
-    host: "Usthad Abi Vakkas Usthad",
-    date: "05/05/2025",
-    time: "In Camp",
-    description: "Let Me Fly” with Usthad Vakkas Hudawi — where your dreams grow wings and your skills find their sky.
-    It’s time to rise, break limits, and soar toward the greatness waiting inside you!
--   name: "Mothers day : Special poster",
-    date: "11/05/2025",
-    description: Join Abha Community in honoring the unconditional love, strength, and sacrifices of mothers everywhere! Our special Mother’s Day poster is a vibrant tribute to the incredible women who shape our lives with warmth and wisdom.
--   name: "Know The Legend",
-    stage: "7th Class",
-    host: "English Wing",
-    date: "Every Tuesday",
-    description: "Journey into Romanticism! The English Wing's #KnowTheLegend series begins with William Wordsworth – explore the poet who made nature sing. Stay tuned!" #AbhaLiteraryJourney 
--   name: "Nurse Day : Special Poster",
-    date: "12/05/2025",
-    description: Saluting Our Angels in Scrubs! This #InternationalNursesDay, Abha celebrates the compassion, courage and tireless care of nurses who heal the world every day. Join us in honoring these healthcare heroes!
--   name: "Al-Judoor",
-    stage: "7th Class",
-    host: "Ma'moon",
-    date: "01/05/2025",
-    time: "8 : 00 PM",
-    description: Al-Judoor is an Abha Academia initiative by our union to teach students the foundational grammar of Arabic in an engaging and accessible way.
--   name: "Fluent Flicks",
-    stage: "7th Class",
-    host: "Ihsan",
-    date: "Every Wednesday",
-    time: "8 : 30 PM",
-    description: `Fluent Flicks is an English Wing program designed to introduce students to new English vocabulary through fun and interactive learning.
--   name: "ABHA Parliament - Janashabdam",
-    stage: "7th Class",
-    host: "Class leader",
-    date: "All Month last Week",
-    time: "9 : 30 PM",
-    description: ABHA Parliament is an inspiring initiative to empower and motivate the class wing through leadership, collaboration, and active participation.
--   name: "Carrier Guidance",
-    stage: "7th Class",
-    host: "Usthad Muhammad Asif Hudawi",
-    date: "15/05/2025",
-    time: "3 : 20 PM",
-    description: A Career Guidance class by Usthad Muhammed Asif Hudawi is being conducted to help students make informed and purpose-driven career choices.
--   name: "നേര്‍കാഴ്ച - മോദിയോടുള്ള ചോദ്യങ്ങള്‍",
-    stage: "In front of 7th Class",
-    host: "Anwar sadath",
-    date: "13/05/2025",
-    time: "9 : 30 PM",
-    description: IQ Orbit is hosting a group discussion titled "നേര്‍കാഴ്ച - മോദിയോടുള്ള ചോദ്യങ്ങള്‍" to critically engage students on the Pahalgam terrorist attack and encourage thoughtful dialogue.
--   name: "لطائف قرآنية",
-    stage: "7th Class",
-    host: "Ma'moon",
-    date: "01/05/2025",
-    time: "6 : 30 AM",
-    description: "لطائف قرآنية" is an enlightening session by Ma'moon under Abha Academia, aimed at introducing students to the profound laws and wisdom of the Qur’an.
--    name: "നേര്‍കാഴ്ച - 3 diffrent topic",
-    stage: "In front of 7th Class",
-    host: "IQ Orbit",
-    date: "21/05/2025",
-    time: "9 : 30 PM",
-    image: Program21,
-    description: `ABHA conducting "നേര്‍കാഴ്ച" sessions on three diverse topics, hosted by IQ Orbit, to spark critical thinking and open discussion among students.
--   name: "World Anti-Terrorist day - Special poster",
-    date: "21/05/2025",
-    description: ABHA created a powerful special poster to commemorate Anti-Terrorist Day, spreading awareness and promoting peace among students.
--   name: "ABHA Official web launching",
-    stage: "Masjid Ground floor",
-    host: "Usthad Muhammed Shafi Hudawi",
-    date: "21/05/2025",
-    time: "1 : 30 PM",
--   name: "Brothers day",
-    date: "24/05/2025",
-    description: Celebrating the unbreakable bond of love, laughter, and brotherhood this Brothers Day!
--   name: "Web Design Course",
-    stage: "7th class",
-    host: "Usthad Muhammed Rahoof Hudawi",
-    date: "18/05/2025",
-    time: "9 : 30 PM",
-    description: Master the art of modern web design with Usthad Muhammad Rahoof Hudawi in our comprehensive and practical course.
--   name: "Tabloid - Koottezhuth Publication",
-    wing: "Malayalam Wing",
-    stage: "Masjid Ground floor",
-    date: "21/05/2025",
-    time: "1 : 30 PM",
-    description: Kuttezhuth – A heartfelt Malayalam tabloid celebrating the warmth, values, and stories of family life. 
-    description: Abha proudly launched its official website, unveiled by Usthad Muhammed Shafi Hudawi, marking a new milestone in our community’s digital journey.
+🕊️ **Tomorrow's Assembly (August 6)**  
+- Theme: *Hiroshima Remembrance*  
+- Description: Commemorating the day America dropped the nuclear bomb on Hiroshima in 1945.  
+  Our class is hosting this assembly to promote peace, reflect on the value of life, and raise awareness about the horrors of war.
 
 === Class teacher ===
 Class Teacher: Muhammed Shareef Hudawi
@@ -367,7 +412,7 @@ Never be boring. Reference creativity, innovation, and community when relevant.
 Use emojis sparingly — only to add clear emphasis or emotion, never as filler.
 
 Abha is the class union of Hisan, the student community of Nahjurrashad Islamic College Chamakkala, Chandrappinni, Thrissure, Kerala, India.
-"""
+""" + str(abha_programs)
 # ----------------------- AI Agent Setup -----------------------
 try:
     model = ChatOpenAI(
@@ -467,14 +512,34 @@ def handle_criticism(input_text: str) -> Optional[str]:
         )
     return None
 # ----------------------- Predefined Responses -----------------------
+
 def get_predefined_response(input_text: str) -> Optional[str]:
+    input_text = input_text.lower()
+    
+    if "today" in input_text and "special" in input_text:
+        today = datetime.now().strftime("%d/%m/%Y")
+        specials = [p for p in abha_programs if p["date"] == today]
+        if specials:
+            response_lines = []
+            for program in specials:
+                line = (
+                    f"🎉 **Today's Special: {program['name']}**\n"
+                    f"- Host: {program.get('host', 'TBA')}\n"
+                    f"- Time: {program.get('time', 'TBA')}\n"
+                    f"- Description: {program['description']}"
+                )
+                response_lines.append(line)
+            return "\n\n".join(response_lines)
+        else:
+            return "There’s no special program scheduled today. But stay tuned — Abha always has something brewing! 🔥"
+    
     responses = {
         "what is abha": "Abha is a visionary student union that promotes creativity, unity, and leadership through various community-driven activities.",
         "who are you": "I’m Abha — your loyal digital companion representing the Abha Student Community Union!",
         "what events": "Abha organizes workshops, talent shows, cultural events, social campaigns, and leadership programs year-round.",
         "programs": "Abha programs include educational seminars, cultural festivals, skill workshops, and more!",
-        
     }
+
     return next((res for key, res in responses.items() if key in input_text), None)
 # ----------------------- Run Server (Optional) -----------------------
 if __name__ == "__main__":
