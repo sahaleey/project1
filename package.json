@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "@types/axios": "^0.9.36"
+  },
+  "dependencies": {
+    "openai": "^5.11.0"
   }
 }

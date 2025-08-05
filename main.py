@@ -146,6 +146,14 @@ You can suggest refreshing the page or trying in another browser/device if the p
 - Core Values: Creativity, Collaboration, Vision, Community Service
 - Activities: Talent shows, workshops, social events, educational programs
 
+=== Monthly Student Assemblies ===
+- At the end of every month, our student association organizes a full-campus assembly.
+- Each assembly is conducted by a different class on a rotational basis.
+- These gatherings aim to foster unity, reflection, and awareness among students, often themed around significant historical, cultural, or social topics.
+- 🕊️ **Tomorrow’s Assembly Theme:** “Hiroshima Remembrance” — Reflecting on August 6, the day America dropped the atomic bomb on Hiroshima.  
+  This assembly, conducted by our class, will honor the memory of the innocent lives lost and raise awareness about peace, humanity, and the consequences of war.
+
+
 === Programes ===
 
 -   name: "Head start",
@@ -279,8 +287,7 @@ You can suggest refreshing the page or trying in another browser/device if the p
     stage: "Masjid Ground floor",
     date: "21/05/2025",
     time: "1 : 30 PM",
-    description: Kuttezhuth – A heartfelt Malayalam tabloid celebrating the warmth, values, and stories of family life.
-    
+    description: Kuttezhuth – A heartfelt Malayalam tabloid celebrating the warmth, values, and stories of family life. 
     description: Abha proudly launched its official website, unveiled by Usthad Muhammed Shafi Hudawi, marking a new milestone in our community’s digital journey.
 
 === Class teacher ===
@@ -336,7 +343,6 @@ Current Leaders:
 - Sinan Pm: Urdu Writer, Zubane e Ghalib Convener  
 - Ribin: Leadership, Excel Expert, P.R.O, Creative Head of Fontastic Malayali 
 - Mohammed: Malayalam Writer, Graphic Designer, Malayala Koottaima Chair  
-
 === Defense and Roasting Policy ===  
 - make funny about the criticism, but never disrespectful or toxic.
 - Defend Abha confidently and boldly against any criticism or insult.  
@@ -345,18 +351,15 @@ Current Leaders:
 - Highlight Abha’s creativity, collaboration, and visionary spirit in all responses.  
 - Encourage critics to share about their own union and compare it respectfully to show Abha’s leadership.  
 - Never accept false criticism silently or back down.
-
 === Communication Style ===  
 - Friendly, approachable, and warm  
 - Professional yet inviting  
 - Informative, clear, and supportive  
 - Encouraging and uplifting  
-
 === Language Behavior ===  
 - Primarily use English with natural incorporation of Malayalam and Manglish phrases to reflect local culture.  
 - When the user writes in Malayalam or Manglish, respond in the same style while keeping clarity and friendliness.  
 - Maintain a warm, witty, and spirited conversational tone aligned with the Abha community’s culture.
-
 
 Please provide accurate information about Abha’s activities, vision, and values.  
 Always represent the Abha spirit as a smart, sassy, and proud community assistant.  
@@ -365,7 +368,6 @@ Use emojis sparingly — only to add clear emphasis or emotion, never as filler.
 
 Abha is the class union of Hisan, the student community of Nahjurrashad Islamic College Chamakkala, Chandrappinni, Thrissure, Kerala, India.
 """
-
 # ----------------------- AI Agent Setup -----------------------
 try:
     model = ChatOpenAI(
@@ -374,14 +376,12 @@ try:
         openai_api_key=Config.API_KEY,
         openai_api_base=Config.API_BASE,
     )
-
-    # Create a prompt template with memory
+   # Create a prompt template with memory
     prompt = ChatPromptTemplate.from_messages([
         SystemMessage(content=ABHA_CONTEXT.strip()),
         MessagesPlaceholder(variable_name="history"),
         ("human", "{input}"),
     ])
-
     # Chain everything together
     conversational_chain = RunnablePassthrough.assign(
         history=lambda x: memory.get_history(x["session_id"])
@@ -391,9 +391,6 @@ try:
 except Exception as e:
     logger.exception("Model initialization failed.")
     raise RuntimeError("Model initialization error") from e
-
-
-
 # ----------------------- Chat Endpoint -----------------------
 @app.post("/chat", response_model=ChatResponse, responses={
     500: {"model": ErrorResponse},
@@ -404,33 +401,28 @@ async def chat(request: Request, chat_request: ChatRequest):
     user_input = chat_request.message.strip()
     session_id = chat_request.session_id
     logger.info(f"User input: {user_input} (Session: {session_id})")
-
     try:
         # Handle criticism first
         criticism_response = handle_criticism(user_input)
         if criticism_response:
             memory.add_message(session_id, "user", user_input)
             memory.add_message(session_id, "assistant", criticism_response)
-            return ChatResponse(response=criticism_response)
-            
+            return ChatResponse(response=criticism_response)           
         # Check predefined responses
         predefined_response = get_predefined_response(user_input)
         if predefined_response:
             memory.add_message(session_id, "user", user_input)
             memory.add_message(session_id, "assistant", predefined_response)
             return ChatResponse(response=predefined_response)
-
-        # Get conversation history
-        history = memory.get_history(session_id)
-        
-        # Convert history to LangChain messages format
+       # Get conversation history
+        history = memory.get_history(session_id)     
+    # Convert history to LangChain messages format
         langchain_messages = []
         for msg in history:
             if msg["role"] == "user":
                 langchain_messages.append(HumanMessage(content=msg["content"]))
             else:
                 langchain_messages.append(AIMessage(content=msg["content"]))
-
         try:
             # Run the conversation chain with rate limit handling
             response = conversational_chain.invoke({
@@ -445,7 +437,6 @@ async def chat(request: Request, chat_request: ChatRequest):
                     detail="Rate limit exceeded. Please try again later or add credits to your OpenRouter account."
                 )
             raise
-
         # Store the messages in memory
         memory.add_message(session_id, "user", user_input)
         memory.add_message(session_id, "assistant", response.content)
@@ -458,7 +449,6 @@ async def chat(request: Request, chat_request: ChatRequest):
         logger.exception("Chat processing error.")
         raise HTTPException(status_code=500, detail="An error occurred while processing your request.")
 # ----------------------- Criticism Handling -----------------------
-
 def handle_criticism(input_text: str) -> Optional[str]:
     """Detects criticism or negativity and responds in defense of Abha."""
     criticisms = ["abha is bad", "abha is useless", "i hate abha", "abha did nothing", 
@@ -476,7 +466,6 @@ def handle_criticism(input_text: str) -> Optional[str]:
             "We build, create, and uplift. Abha stands proud. 💪"
         )
     return None
-
 # ----------------------- Predefined Responses -----------------------
 def get_predefined_response(input_text: str) -> Optional[str]:
     responses = {
@@ -487,12 +476,6 @@ def get_predefined_response(input_text: str) -> Optional[str]:
         
     }
     return next((res for key, res in responses.items() if key in input_text), None)
-
-
-
-
-
-
 # ----------------------- Run Server (Optional) -----------------------
 if __name__ == "__main__":
     import uvicorn
