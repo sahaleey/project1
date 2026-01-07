@@ -64,7 +64,7 @@ class ErrorResponse(BaseModel):
 
 # ----------------------- Config -----------------------
 class Config:
-    MODEL_NAME = os.getenv("MODEL_NAME", "deepseek/deepseek-r1-0528-qwen3-8b:free")
+    MODEL_NAME = os.getenv("MODEL_NAME", "nex-agi/deepseek-v3.1-nex-n1:free")
     API_KEY = os.getenv("OPENROUTER_API_KEY")
     API_BASE = os.getenv("OPENROUTER_API_BASE", "https://openrouter.ai/api/v1")
     MAX_RETRIES = 3
